@@ -1,0 +1,41 @@
+{
+  "name": "@dashkite/rio-vega",
+  "version": "0.0.0",
+  "description": "Rio combinators for use with the HTTP/Vega Client",
+  "keywords": [],
+  "homepage": "https://github.com/dashkite/rio-vega#readme",
+  "bugs": {
+    "url": "https://github.com/dashkite/rio-vega/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dashkite/rio-vega.git"
+  },
+  "license": "SEE LICENSE IN LICENSE.md",
+  "author": "Daniel Yoder",
+  "exports": {
+    ".": {
+      "browser": "./build/browser/src/index.js"
+    }
+  },
+  "main": "build/browser/src/index.js",
+  "files": [
+    "build/browser/src"
+  ],
+  "scripts": {
+    "test": "genie test",
+    "build": "genie build"
+  },
+  "devDependencies": {
+    "@dashkite/amen": "^0.2.0",
+    "@dashkite/amen-console": "^0.0.2",
+    "@dashkite/assert": "^0.1.4",
+    "@dashkite/genie": "link:../genie",
+    "@dashkite/genie-coffee": "link:../genie-coffee"
+  },
+  "dependencies": {
+    "@dashkite/joy": "^0.3.16",
+    "@dashkite/katana": "^0.4.8",
+    "@dashkite/vega-client": "link:../vega-client"
+  }
+}
