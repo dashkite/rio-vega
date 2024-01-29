@@ -1,68 +1,89 @@
 import * as Fn from "@dashkite/joy/function"
+import * as Obj from "@dashkite/joy/object"
 import { generic } from "@dashkite/joy/generic"
 import * as Type from "@dashkite/joy/type"
 import * as K from "@dashkite/katana/async"
-import { Resource } from "@dashkite/vega-client"
+import { Daisho } from "@dashkite/katana"
+import * as Vega from "@dashkite/vega-client"
 
+filter = ( name ) ->
+
+  do ({ g } = {}) ->
+
+    g = generic name: "HTTP:#{ name }"
+
+    generic g, 
+      Type.isArray,
+      ( fx ) ->
+          f = Fn.flow fx
+          ( daisho, event ) ->
+            if event.name == name
+              daisho.push event.value
+              f daisho 
+            else daisho
+    
+    generic g,
+      ( Type.isKind Daisho ),
+      Type.isObject,
+      ( daisho, event ) ->
+        if event.name == name
+          daisho.push event.value
+        daisho
+
+    g
+    
+# TODO accommodate unary post?
+# TODO add support for patch when ready
+http = ( method ) ->
+  ( fx ) ->
+    ( daisho ) ->
+      start = Vega.HTTP[ method ]
+      resource = daisho.read "resource"
+      reactor = switch method
+        when "get", "delete"
+          start resource
+        when "put", "post"
+          content = daisho.peek()
+          start resource, content
+        else 
+          throw new Error "rio-vega: unsupport method '#{ method }'"
+      for await event from reactor
+        for f in fx
+          daisho = await f daisho, event
+      daisho
+  
 HTTP = 
 
-  resource: do ({ resource } = {}) ->
-    
-    resource = generic name: "HTTP.resource"
-
-    generic resource,
-      Type.isObject,
-      ( specifier ) ->
-        Fn.flow [
-          K.read "handle"
-          K.poke ( handle ) ->
-            handle.resource = Resource.create specifier
-        ]
-    
-    generic resource,
-      Type.isFunction,
-      ( specify ) ->
-        Fn.flow [
-          K.push specify
-          K.read "handle"
-          K.poke ( handle, specifier ) ->
-            handle.resource = Resource.create specifier
-        ]
-    
-    resource
-
-  get: ->
+  resource: ( specifier ) ->
     Fn.flow [
-      K.read "handle"
-      K.poke ({ resource }) -> do resource.get
+      K.poke ( description ) ->
+        { specifier..., description... }
+      K.write "resource"
     ]
 
-  put: ->
-    Fn.flow [
-      K.read "handle"
-      K.poke ({ resource }, update ) -> 
-        data = await do resource.get
-        resource.put { data..., update... }
-    ]
+  get: http "get"
 
-  delete: ->
-    Fn.flow [
-      K.read "handle"
-      K.poke ({ resource }) -> do resource.delete
-    ]
+  put: http "put"
+  
+  delete: http "delete"
 
-  post: ->
-    Fn.flow [
-      K.read "handle"
-      K.poke ({ resource }, data ) -> resource.post data
-    ]
+  post: http "post"
 
-  patch: ->
-    Fn.flow [
-      K.read "handle"
-      K.poke ({ resource }, update ) -> 
-        resource.patch update
-    ]
+  # patch: http "patch"
+
+  success: filter "success"
+
+  failure: filter "failure"
+
+  json: filter "json"
+
+  text: filter "text"
+
+  blob: filter "blob"
+
+  content: filter "content"
+
+  announce: filter "announce"
 
 export { HTTP }
 export default HTTP
