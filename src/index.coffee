@@ -32,13 +32,22 @@ filter = ( name ) ->
 
     g
     
-# TODO accommodate unary post?
-# TODO add support for patch when ready
-http = ( method ) ->
-  ( fx ) ->
+Resource =
+
+  get: ( daisho ) ->
+    handle = daisho.read "handle"
+    daisho.poke handle.resource
+    daisho
+
+  set: ( daisho ) ->
+    handle = daisho.read "handle"
+    handle.resource = daisho.pop()
+    daisho
+
+  request: ( method ) ->
     ( daisho ) ->
       start = Vega.HTTP[ method ]
-      resource = daisho.read "resource"
+      resource = daisho.pop()
       reactor = switch method
         when "get", "delete"
           start resource
@@ -50,7 +59,16 @@ http = ( method ) ->
       for await event from reactor
         for f in fx
           daisho = await f daisho, event
-      daisho
+      daisho  
+
+# TODO accommodate unary post?
+# TODO add support for patch when ready
+http = ( method ) ->
+  ( fx ) ->
+    Fn.flow [
+      Resource.get
+      Resource.request method
+    ]
   
 HTTP = 
 
@@ -58,7 +76,7 @@ HTTP =
     Fn.flow [
       K.poke ( description ) ->
         { specifier..., description... }
-      K.write "resource"
+      Resource.set
     ]
 
   get: http "get"

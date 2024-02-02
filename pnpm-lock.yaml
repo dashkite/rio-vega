@@ -11,6 +11,9 @@ dependencies:
   '@dashkite/katana':
     specifier: ^0.4.8
     version: 0.4.8
+  '@dashkite/rio':
+    specifier: link:../carbon
+    version: link:../carbon
   '@dashkite/vega-client':
     specifier: link:../vega-client
     version: link:../vega-client
