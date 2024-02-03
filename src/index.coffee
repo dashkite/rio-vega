@@ -34,20 +34,15 @@ filter = ( name ) ->
     
 Resource =
 
-  get: ( daisho ) ->
-    handle = daisho.read "handle"
-    daisho.poke handle.resource
-    daisho
-
-  set: ( daisho ) ->
+  save: ( daisho ) ->
     handle = daisho.read "handle"
     handle.resource = daisho.pop()
     daisho
 
-  request: ( method ) ->
+  request: ( method, fx ) ->
     ( daisho ) ->
       start = Vega.HTTP[ method ]
-      resource = daisho.pop()
+      { resource } = daisho.read "handle"
       reactor = switch method
         when "get", "delete"
           start resource
@@ -55,7 +50,7 @@ Resource =
           content = daisho.peek()
           start resource, content
         else 
-          throw new Error "rio-vega: unsupport method '#{ method }'"
+          throw new Error "rio-vega: unsupported method '#{ method }'"
       for await event from reactor
         for f in fx
           daisho = await f daisho, event
@@ -64,11 +59,7 @@ Resource =
 # TODO accommodate unary post?
 # TODO add support for patch when ready
 http = ( method ) ->
-  ( fx ) ->
-    Fn.flow [
-      Resource.get
-      Resource.request method
-    ]
+  ( fx ) -> Resource.request method, fx
   
 HTTP = 
 
@@ -76,7 +67,7 @@ HTTP =
     Fn.flow [
       K.poke ( description ) ->
         { specifier..., description... }
-      Resource.set
+      Resource.save
     ]
 
   get: http "get"
