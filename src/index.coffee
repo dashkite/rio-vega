@@ -87,8 +87,8 @@ HTTP =
   # but binding the resource class statically
   resource: ( specifier ) ->
     Fn.flow [
-      K.poke ( description ) ->
-        { specifier..., description... }
+      K.poke ( bindings ) ->
+        { specifier..., bindings }
       Resource.save
     ]
 
