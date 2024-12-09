@@ -86,9 +86,8 @@ HTTP =
   # which allows us to get bindings dynamically
   # but binding the resource class statically
   resource: ( specifier ) ->
-    Fn.flow [
-      K.poke ( bindings ) ->
-        { specifier..., bindings }
+    Fn.tee Fn.flow [
+      K.poke ( bindings ) -> { specifier..., bindings }
       Resource.save
     ]
 
