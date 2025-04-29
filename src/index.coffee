@@ -41,8 +41,6 @@ Resource =
           daisho = await f daisho, r
       daisho  
 
-# TODO accommodate unary post?
-# TODO add support for patch when ready
 
 # simple adapter for making HTTP requests
 http = ( method ) ->
